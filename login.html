@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EduTrack — Smart Attendance System</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --accent-glow: rgba(59,130,246,0.25);
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: rgba(255,255,255,0.07);
+    --radius: 14px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Animated background mesh */
+  .bg-mesh {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 20%, rgba(59,130,246,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 80%, rgba(16,185,129,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 60% 10%, rgba(96,165,250,0.06) 0%, transparent 50%);
+  }
+
+  .grid-lines {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Floating orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(60px);
+    animation: float 8s ease-in-out infinite;
+    z-index: 0;
+  }
+  .orb1 { width:350px; height:350px; background: rgba(59,130,246,0.08); top:-100px; left:-100px; }
+  .orb2 { width:250px; height:250px; background: rgba(16,185,129,0.06); bottom:-80px; right:-80px; animation-delay: -4s; }
+
+  @keyframes float {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33%      { transform: translate(30px,-20px) scale(1.05); }
+    66%      { transform: translate(-20px,15px) scale(0.97); }
+  }
+
+  /* Main wrapper */
+  .login-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+    animation: slideUp 0.6s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  @keyframes slideUp {
+    from { opacity:0; transform: translateY(40px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .login-card {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 44px 40px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+
+  /* Logo */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent), #1d4ed8);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 8px 24px var(--accent-glow);
+  }
+  .logo-text { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo-sub  { font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 2px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .subtitle { color: var(--text-muted); font-size: 13.5px; margin-bottom: 32px; }
+
+  /* Role tabs */
+  .role-tabs {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 6px;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+  .role-tab {
+    padding: 8px 4px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .role-tab .tab-icon { font-size: 16px; }
+  .role-tab:hover { color: var(--text); }
+  .role-tab.active { background: var(--accent); color: #fff; box-shadow: 0 4px 12px var(--accent-glow); }
+
+  /* Form */
+  .form-group { margin-bottom: 18px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .input-wrap {
+    position: relative;
+  }
+  .input-wrap .input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  input[type=text],
+  input[type=password] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 14px 13px 42px;
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  input::placeholder { color: rgba(148,163,184,0.5); }
+
+  /* Demo hint */
+  .demo-hint {
+    background: rgba(59,130,246,0.08);
+    border: 1px solid rgba(59,130,246,0.15);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    color: var(--accent2);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.7;
+  }
+
+  /* Submit button */
+  .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), #1d4ed8);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px var(--accent-glow);
+  }
+  .btn-login:hover  { transform: translateY(-2px); box-shadow: 0 12px 32px var(--accent-glow); }
+  .btn-login:active { transform: translateY(0); }
+  .btn-login.loading { pointer-events: none; opacity: 0.8; }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Error msg */
+  .error-msg {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #fca5a5;
+    margin-top: 14px;
+    display: none;
+  }
+  .error-msg.show { display: block; animation: shake 0.4s ease; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%,60%  { transform: translateX(-6px); }
+    40%,80%  { transform: translateX(6px); }
+  }
+
+  /* Footer */
+  .card-footer {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .card-footer strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+<div class="grid-lines"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="login-wrapper">
+  <div class="login-card">
+
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      <div>
+        <div class="logo-text">EduTrack</div>
+        <div class="logo-sub">Smart Attendance System</div>
+      </div>
+    </div>
+
+    <h2>Welcome back</h2>
+    <p class="subtitle">Sign in to access your dashboard</p>
+
+    <!-- Role tabs -->
+    <div class="role-tabs" id="roleTabs">
+      <button class="role-tab active" onclick="selectRole('student',this)">
+        <span class="tab-icon">👨‍🎓</span>Student
+      </button>
+      <button class="role-tab" onclick="selectRole('teacher',this)">
+        <span class="tab-icon">👩‍🏫</span>Teacher
+      </button>
+      <button class="role-tab" onclick="selectRole('admin',this)">
+        <span class="tab-icon">🛡️</span>Admin
+      </button>
+    </div>
+
+    <!-- Demo credentials -->
+    <div class="demo-hint" id="demoHint">
+      Demo: <strong>student1</strong> / <strong>password</strong>
+    </div>
+
+    <!-- Login form -->
+    <div class="form-group">
+      <label>Username</label>
+      <div class="input-wrap">
+        <span class="input-icon">👤</span>
+        <input type="text" id="username" placeholder="Enter your username" autocomplete="username"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <span class="input-icon">🔒</span>
+        <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()"/>
+      </div>
+    </div>
+
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">
+      Sign In →
+    </button>
+
+    <div class="error-msg" id="errorMsg">⚠️ Invalid username or password. Please try again.</div>
+
+    <div class="card-footer">
+      <strong>ITM Gorakhpur</strong> · Department of CSE · Session 2025-26
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================================
+// Demo mode: works without PHP backend
+// For production, connect to /api/login.php
+// ============================================
+
+const DEMO_USERS = {
+  student1:  { role: 'student',  name: 'Shiva Giri',         redirect: 'student_dashboard.html' },
+  student2:  { role: 'student',  name: 'Tanay Jaswal',        redirect: 'student_dashboard.html' },
+  teacher1:  { role: 'teacher',  name: 'Utkarshita Pandey',   redirect: 'teacher_dashboard.html' },
+  admin:     { role: 'admin',    name: 'Administrator',       redirect: 'admin_dashboard.html' },
+};
+const DEMO_PASS = 'password';
+
+let selectedRole = 'student';
+
+function selectRole(role, el) {
+  selectedRole = role;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const hints = {
+    student: 'Demo: <strong>student1</strong> / <strong>password</strong>',
+    teacher: 'Demo: <strong>teacher1</strong> / <strong>password</strong>',
+    admin:   'Demo: <strong>admin</strong> / <strong>password</strong>',
+  };
+  document.getElementById('demoHint').innerHTML = 'Demo: ' + hints[role].replace('Demo: ','');
+}
+
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const btn      = document.getElementById('loginBtn');
+  const errMsg   = document.getElementById('errorMsg');
+
+  if (!username || !password) {
+    showError('Please enter both username and password.');
+    return;
+  }
+
+  // Loading state
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="spinner"></span> Signing in...';
+  errMsg.classList.remove('show');
+
+  await new Promise(r => setTimeout(r, 700)); // Simulate network
+
+  // Try PHP backend first, fallback to demo
+  let success = false;
+  let userData = null;
+
+  try {
+    const resp = await fetch('../api/login.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+    });
+    const data = await resp.json();
+    if (data.success) {
+      success = true;
+      userData = data;
+    }
+  } catch(e) {
+    // Fallback to demo mode
+    if (DEMO_USERS[username] && password === DEMO_PASS) {
+      const u = DEMO_USERS[username];
+      if (u.role === selectedRole || true) { // allow any role match
+        success = true;
+        userData = { role: u.role, redirect: u.redirect, name: u.name };
+      }
+    }
+  }
+
+  if (success) {
+    // Save session info
+    sessionStorage.setItem('user_role', userData.role);
+    sessionStorage.setItem('username', username);
+    sessionStorage.setItem('user_name', userData.name || username);
+    btn.innerHTML = '✓ Success! Redirecting...';
+    setTimeout(() => {
+      window.location.href = userData.redirect;
+    }, 600);
+  } else {
+    btn.classList.remove('loading');
+    btn.innerHTML = 'Sign In →';
+    showError('Invalid username or password. Try: student1 / password');
+  }
+}
+
+function showError(msg) {
+  const e = document.getElementById('errorMsg');
+  e.textContent = '⚠️ ' + msg;
+  e.classList.add('show');
+}
+</script>
+</body>
+</html>
