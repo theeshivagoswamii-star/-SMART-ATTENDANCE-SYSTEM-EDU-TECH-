@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EduTrack — Smart Attendance System | ITM Gorakhpur</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #c0392b;
+    --accent2: #e74c3c;
+    --text: #f1f5f9;
+    --text-muted: #cbd5e1;
+    --border: rgba(255,255,255,0.15);
+    --glass: rgba(10, 14, 30, 0.75);
+    --radius: 16px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; position: relative;
+  }
+
+  /* ── BACKGROUND ── */
+  .bg-image {
+    position: fixed; inset: 0;
+    background-image: url('ITM-Building.png');
+    background-size: cover; background-position: center top;
+    z-index: 0; animation: slowZoom 20s ease-in-out infinite alternate;
+  }
+  @keyframes slowZoom {
+    from { transform: scale(1.04); } to { transform: scale(1.10); }
+  }
+  .bg-overlay {
+    position: fixed; inset: 0; z-index: 1;
+    background: linear-gradient(135deg,rgba(5,8,20,0.80) 0%,rgba(10,14,30,0.65) 50%,rgba(5,8,20,0.82) 100%);
+  }
+  .bg-bottom-fade {
+    position: fixed; bottom:0; left:0; right:0; height:160px; z-index:2;
+    background: linear-gradient(to top, rgba(5,8,20,0.9), transparent);
+  }
+
+  /* ── TOP BAR ── */
+  .top-bar {
+    position: fixed; top:0; left:0; right:0; z-index:10;
+    padding: 13px 36px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(5,8,20,0.6); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .top-logo { display:flex; align-items:center; gap:12px; }
+  .top-logo-icon {
+    width:40px; height:40px;
+    background: linear-gradient(135deg,var(--accent),#922b21);
+    border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:20px; box-shadow:0 4px 16px rgba(192,57,43,0.4);
+  }
+  .top-logo-name { font-size:18px; font-weight:800; letter-spacing:-0.5px; color:#fff; }
+  .top-logo-sub  { font-size:10px; color:var(--text-muted); margin-top:1px; letter-spacing:0.5px; text-transform:uppercase; }
+  .top-institute { font-size:12px; color:var(--text-muted); text-align:right; line-height:1.6; }
+  .top-institute strong { color:#fff; }
+
+  /* ── SCROLLABLE CARD WRAPPER ── */
+  .card-wrapper {
+    position: relative; z-index:5;
+    width: 100%; max-width: 460px;
+    padding: 90px 20px 60px;
+    max-height: 100vh; overflow-y: auto; scrollbar-width: none;
+    animation: riseUp 0.7s cubic-bezier(0.16,1,0.3,1);
+  }
+  .card-wrapper::-webkit-scrollbar { display:none; }
+  @keyframes riseUp {
+    from { opacity:0; transform:translateY(50px) scale(0.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  .card {
+    background: var(--glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border); border-radius: 24px; padding: 34px 36px 30px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset;
+  }
+
+  .institute-badge {
+    display:flex; align-items:center; gap:8px;
+    background: rgba(192,57,43,0.15); border: 1px solid rgba(192,57,43,0.3);
+    border-radius:8px; padding:7px 12px; margin-bottom:20px;
+    font-size:11.5px; color:#fca5a5; font-weight:500;
+  }
+
+  .card-title    { font-size:25px; font-weight:800; letter-spacing:-0.8px; color:#fff; }
+  .card-subtitle { font-size:13px; color:var(--text-muted); margin-top:4px; margin-bottom:24px; }
+
+  /* ── AUTH TABS ── */
+  .auth-tabs {
+    display:grid; grid-template-columns:1fr 1fr;
+    background: rgba(255,255,255,0.06); border-radius:12px;
+    padding:4px; margin-bottom:24px; border:1px solid var(--border);
+  }
+  .auth-tab {
+    padding:10px; border:none; background:transparent;
+    color:var(--text-muted); font-family:'Sora',sans-serif;
+    font-size:13px; font-weight:600; border-radius:9px; cursor:pointer; transition:all 0.25s;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .auth-tab:hover { color:#fff; }
+  .auth-tab.active {
+    background: linear-gradient(135deg,var(--accent),#922b21);
+    color:#fff; box-shadow:0 4px 14px rgba(192,57,43,0.4);
+  }
+
+  /* ── ROLE TABS ── */
+  .role-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:20px; }
+  .role-tab {
+    padding:9px 6px; border:1.5px solid rgba(255,255,255,0.1);
+    background:rgba(255,255,255,0.04); color:var(--text-muted);
+    font-family:'Sora',sans-serif; font-size:11.5px; font-weight:500;
+    border-radius:10px; cursor:pointer; transition:all 0.2s;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  .role-tab .ri { font-size:18px; }
+  .role-tab:hover { border-color:rgba(255,255,255,0.25); color:#fff; }
+  .role-tab.active { border-color:var(--accent); background:rgba(192,57,43,0.18); color:#fff; }
+
+  /* ── FORM ── */
+  .form-section { display:none; }
+  .form-section.show { display:block; animation:fadeIn 0.3s ease; }
+  .signup-panel { display:none; }
+  .signup-panel.show { display:block; animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  .form-section-label {
+    font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+    color:rgba(220,80,70,0.9); border-left:3px solid var(--accent);
+    padding-left:9px; margin:18px 0 13px;
+  }
+
+  .form-group { margin-bottom:14px; }
+  .form-row   { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  label {
+    display:block; font-size:10.5px; font-weight:600;
+    color:rgba(203,213,225,0.65); margin-bottom:6px;
+    text-transform:uppercase; letter-spacing:0.6px;
+  }
+  .input-wrap { position:relative; }
+  .input-icon {
+    position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    font-size:14px; color:rgba(203,213,225,0.45); pointer-events:none;
+  }
+  input, select, textarea {
+    width:100%; background:rgba(255,255,255,0.07);
+    border:1.5px solid rgba(255,255,255,0.1); border-radius:10px;
+    padding:11px 12px 11px 38px; color:#fff;
+    font-family:'Sora',sans-serif; font-size:13px; outline:none; transition:all 0.2s;
+  }
+  textarea { padding:11px 12px; resize:vertical; min-height:68px; }
+  input::placeholder, textarea::placeholder { color:rgba(203,213,225,0.3); }
+  input:focus, select:focus, textarea:focus {
+    border-color:var(--accent); background:rgba(255,255,255,0.1);
+    box-shadow:0 0 0 3px rgba(192,57,43,0.12);
+  }
+  select option { background:#1a2235; color:#fff; }
+
+  .btn-submit {
+    width:100%; padding:13px;
+    background:linear-gradient(135deg,var(--accent),#922b21);
+    border:none; border-radius:11px; color:#fff;
+    font-family:'Sora',sans-serif; font-size:14px; font-weight:700;
+    cursor:pointer; transition:all 0.25s;
+    box-shadow:0 8px 24px rgba(192,57,43,0.35); margin-top:6px;
+  }
+  .btn-submit:hover  { transform:translateY(-2px); box-shadow:0 12px 32px rgba(192,57,43,0.5); }
+  .btn-submit:active { transform:translateY(0); }
+  .btn-submit.loading { opacity:0.8; pointer-events:none; }
+
+  .spinner {
+    display:inline-block; width:14px; height:14px;
+    border:2px solid rgba(255,255,255,0.3); border-top-color:#fff;
+    border-radius:50%; animation:spin 0.7s linear infinite;
+    vertical-align:middle; margin-right:7px;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .msg-box { border-radius:8px; padding:10px 14px; font-size:12px; margin-top:10px; display:none; }
+  .msg-box.error   { background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; }
+  .msg-box.success { background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); color:#6ee7b7; }
+  .msg-box.show    { display:block; animation:shake 0.4s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-4px)} 40%,80%{transform:translateX(4px)} }
+
+  .terms-note {
+    font-size:10.5px; color:rgba(203,213,225,0.4);
+    text-align:center; margin-top:12px; line-height:1.6;
+  }
+  .terms-note a { color:rgba(203,213,225,0.6); text-decoration:underline; cursor:pointer; }
+
+  .page-footer {
+    position:fixed; bottom:14px; left:0; right:0; z-index:5;
+    text-align:center; font-size:10.5px; color:rgba(203,213,225,0.45); letter-spacing:0.3px;
+  }
+  .page-footer strong { color:rgba(203,213,225,0.7); }
+</style>
+</head>
+<body>
+
+<div class="bg-image"></div>
+<div class="bg-overlay"></div>
+<div class="bg-bottom-fade"></div>
+
+<div class="top-bar">
+  <div class="top-logo">
+    <div class="top-logo-icon">🎓</div>
+    <div>
+      <div class="top-logo-name">EduTrack</div>
+      <div class="top-logo-sub">Smart Attendance System</div>
+    </div>
+  </div>
+  <div class="top-institute">
+    <strong>Institute of Technology & Management</strong><br>
+    GIDA, Gorakhpur — Session 2025-26
+  </div>
+</div>
+
+<div class="card-wrapper">
+  <div class="card">
+
+    <div class="institute-badge">🏛️ ITM Gorakhpur &nbsp;·&nbsp; Dept. of Computer Science & Engineering</div>
+    <div class="card-title">Welcome 👋</div>
+    <div class="card-subtitle">Sign in or register to access your dashboard</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin"  onclick="switchAuth('login')">🔑 Login</button>
+      <button class="auth-tab"        id="tabSignup" onclick="switchAuth('signup')">📝 Sign Up</button>
+    </div>
+
+    <!-- ═══════════ LOGIN FORM ═══════════ -->
+    <div class="form-section show" id="loginForm">
+      <div class="role-tabs" id="loginRoleTabs">
+        <button class="role-tab active" onclick="selectRole('student',this,'login')"><span class="ri">👨‍🎓</span>Student</button>
+        <button class="role-tab"        onclick="selectRole('teacher',this,'login')"><span class="ri">👩‍🏫</span>Teacher</button>
+        <button class="role-tab"        onclick="selectRole('admin',this,'login')"><span class="ri">🛡️</span>Admin</button>
+      </div>
+      <div class="form-group">
+        <label>Username / Employee ID</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="loginUsername" placeholder="Enter your username" autocomplete="username"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="loginPassword" placeholder="Enter your password" onkeydown="if(event.key==='Enter') doLogin()"/>
+        </div>
+      </div>
+      <button class="btn-submit" id="loginBtn" onclick="doLogin()">Sign In →</button>
+      <div class="msg-box error" id="loginError"></div>
+    </div>
+
+    <!-- ═══════════ SIGNUP FORM ═══════════ -->
+    <div class="form-section" id="signupForm">
+      <div class="role-tabs" id="signupRoleTabs">
+        <button class="role-tab active" onclick="selectRole('student',this,'signup')"><span class="ri">👨‍🎓</span>Student</button>
+        <button class="role-tab"        onclick="selectRole('teacher',this,'signup')"><span class="ri">👩‍🏫</span>Teacher</button>
+        <button class="role-tab"        onclick="selectRole('admin',this,'signup')"><span class="ri">🛡️</span>Admin</button>
+      </div>
+
+      <!-- ── STUDENT ── -->
+      <div class="signup-panel show" id="panel-student">
+        <div class="form-section-label">Personal Information</div>
+        <div class="form-row">
+          <div class="form-group"><label>First Name</label><div class="input-wrap"><span class="input-icon">👤</span><input type="text" id="s-first" placeholder="First name"/></div></div>
+          <div class="form-group"><label>Last Name</label><div class="input-wrap"><span class="input-icon">👤</span><input type="text" id="s-last" placeholder="Last name"/></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Email</label><div class="input-wrap"><span class="input-icon">📧</span><input type="email" id="s-email" placeholder="your@itm.edu"/></div></div>
+          <div class="form-group"><label>Mobile No.</label><div class="input-wrap"><span class="input-icon">📱</span><input type="tel" id="s-phone" placeholder="10-digit number"/></div></div>
+        </div>
+
+        <div class="form-section-label">Academic Details</div>
+        <div class="form-row">
+          <div class="form-group"><label>Enrollment / Roll No.</label><div class="input-wrap"><span class="input-icon">🪪</span><input type="text" id="s-roll" placeholder="e.g. 2401200100156"/></div></div>
+          <div class="form-group"><label>Branch</label><div class="input-wrap"><span class="input-icon">🏫</span><select id="s-branch"><option value="">Select Branch</option><option>CSE</option><option>ECE</option><option>ME</option><option>Civil</option><option>IT</option></select></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Semester</label><div class="input-wrap"><span class="input-icon">📅</span><select id="s-sem"><option value="">Semester</option><option>I</option><option>II</option><option>III</option><option>IV</option><option>V</option><option>VI</option><option>VII</option><option>VIII</option></select></div></div>
+          <div class="form-group"><label>Section</label><div class="input-wrap"><span class="input-icon">🔠</span><select id="s-section"><option value="">Section</option><option>A</option><option>B</option><option>C</option><option>D</option></select></div></div>
+        </div>
+
+        <div class="form-section-label">Login Credentials</div>
+        <div class="form-group"><label>Create Username</label><div class="input-wrap"><span class="input-icon">🔖</span><input type="text" id="s-uname" placeholder="Choose a username"/></div></div>
+        <div class="form-row">
+          <div class="form-group"><label>Password</label><div class="input-wrap"><span class="input-icon">🔒</span><input type="password" id="s-pass" placeholder="Min 8 characters"/></div></div>
+          <div class="form-group"><label>Confirm Password</label><div class="input-wrap"><span class="input-icon">🔑</span><input type="password" id="s-confirm" placeholder="Re-enter password"/></div></div>
+        </div>
+      </div>
+
+      <!-- ── TEACHER ── -->
+      <div class="signup-panel" id="panel-teacher">
+        <div class="form-section-label">Personal Information</div>
+        <div class="form-row">
+          <div class="form-group"><label>First Name</label><div class="input-wrap"><span class="input-icon">👤</span><input type="text" id="t-first" placeholder="First name"/></div></div>
+          <div class="form-group"><label>Last Name</label><div class="input-wrap"><span class="input-icon">👤</span><input type="text" id="t-last" placeholder="Last name"/></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Official Email</label><div class="input-wrap"><span class="input-icon">📧</span><input type="email" id="t-email" placeholder="name@itm.edu"/></div></div>
+          <div class="form-group"><label>Mobile Number</label><div class="input-wrap"><span class="input-icon">📱</span><input type="tel" id="t-phone" placeholder="10-digit number"/></div></div>
+        </div>
+
+        <div class="form-section-label">Professional Details</div>
+        <div class="form-row">
+          <div class="form-group"><label>Employee ID</label><div class="input-wrap"><span class="input-icon">🪪</span><input type="text" id="t-empid" placeholder="e.g. ITM-CSE-2024"/></div></div>
+          <div class="form-group"><label>Designation</label><div class="input-wrap"><span class="input-icon">🏅</span><select id="t-desig"><option value="">Select Designation</option><option>Assistant Professor</option><option>Associate Professor</option><option>Professor</option><option>HOD</option><option>Lab Instructor</option></select></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Department</label><div class="input-wrap"><span class="input-icon">🏫</span><select id="t-dept"><option value="">Select Dept.</option><option>CSE</option><option>ECE</option><option>ME</option><option>Civil</option><option>IT</option></select></div></div>
+          <div class="form-group"><label>Qualification</label><div class="input-wrap"><span class="input-icon">🎓</span><select id="t-qual"><option value="">Highest Degree</option><option>B.Tech</option><option>M.Tech</option><option>PhD</option><option>MBA</option><option>MCA</option></select></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Subjects Teaching</label><div class="input-wrap"><span class="input-icon">📚</span><input type="text" id="t-subjects" placeholder="e.g. Data Structures, DBMS"/></div></div>
+          <div class="form-group"><label>Experience (Years)</label><div class="input-wrap"><span class="input-icon">⏳</span><input type="number" id="t-exp" placeholder="Years of experience" min="0"/></div></div>
+        </div>
+
+        <div class="form-section-label">Login Credentials</div>
+        <div class="form-group"><label>Create Username</label><div class="input-wrap"><span class="input-icon">🔖</span><input type="text" id="t-uname" placeholder="Choose a username"/></div></div>
+        <div class="form-row">
+          <div class="form-group"><label>Password</label><div class="input-wrap"><span class="input-icon">🔒</span><input type="password" id="t-pass" placeholder="Min 8 characters"/></div></div>
+          <div class="form-group"><label>Confirm Password</label><div class="input-wrap"><span class="input-icon">🔑</span><input type="password" id="t-confirm" placeholder="Re-enter password"/></div></div>
+        </div>
+      </div>
+
+      <!-- ── ADMIN ── -->
+      <div class="signup-panel" id="panel-admin">
+        <div class="form-section-label">Administrator Information</div>
+        <div class="form-row">
+          <div class="form-group"><label>First Name</label><div class="input-wrap"><span class="input-icon">👤</span><input type="text" id="a-first" placeholder="First name"/></div></div>
+          <div class="form-group"><label>Last Name</label><div class="input-wrap"><span class="input-icon">👤</span><input type="text" id="a-last" placeholder="Last name"/></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Official Email</label><div class="input-wrap"><span class="input-icon">📧</span><input type="email" id="a-email" placeholder="admin@itm.edu"/></div></div>
+          <div class="form-group"><label>Mobile Number</label><div class="input-wrap"><span class="input-icon">📱</span><input type="tel" id="a-phone" placeholder="10-digit number"/></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Admin / Staff ID</label><div class="input-wrap"><span class="input-icon">🪪</span><input type="text" id="a-staffid" placeholder="e.g. ITM-ADMIN-001"/></div></div>
+          <div class="form-group"><label>Admin Role</label><div class="input-wrap"><span class="input-icon">🛡️</span><select id="a-role"><option value="">Select Role</option><option>Super Admin</option><option>HOD</option><option>Exam Controller</option><option>Department Admin</option><option>System Manager</option></select></div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Department / Office</label><div class="input-wrap"><span class="input-icon">🏛️</span><select id="a-dept"><option value="">Select</option><option>CSE</option><option>ECE</option><option>ME</option><option>Civil</option><option>IT</option><option>Administration</option><option>Examination Cell</option></select></div></div>
+          <div class="form-group"><label>Access Level</label><div class="input-wrap"><span class="input-icon">🔐</span><select id="a-access"><option value="">Select Level</option><option>Full Access</option><option>Department Only</option><option>Read Only</option><option>Reports Only</option></select></div></div>
+        </div>
+
+        <div class="form-section-label">Authorization</div>
+        <div class="form-group"><label>Institute Authorization Code</label><div class="input-wrap"><span class="input-icon">🔑</span><input type="text" id="a-authcode" placeholder="Code provided by Institute IT Cell"/></div></div>
+
+        <div class="form-section-label">Login Credentials</div>
+        <div class="form-group"><label>Create Username</label><div class="input-wrap"><span class="input-icon">🔖</span><input type="text" id="a-uname" placeholder="Choose a unique username"/></div></div>
+        <div class="form-row">
+          <div class="form-group"><label>Password</label><div class="input-wrap"><span class="input-icon">🔒</span><input type="password" id="a-pass" placeholder="Min 8 characters"/></div></div>
+          <div class="form-group"><label>Confirm Password</label><div class="input-wrap"><span class="input-icon">🔑</span><input type="password" id="a-confirm" placeholder="Re-enter password"/></div></div>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="signupBtn" onclick="doSignup()">Create Account →</button>
+      <div class="msg-box error"   id="signupError"></div>
+      <div class="msg-box success" id="signupSuccess"></div>
+      <div class="terms-note">By registering, you agree to ITM's <a>Terms of Use</a> and <a>Privacy Policy</a></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="page-footer">
+  <strong>Institute of Technology & Management, GIDA, Gorakhpur</strong> &nbsp;·&nbsp; Affiliated to Dr. APJAKTU, Lucknow &nbsp;·&nbsp; AICTE Approved
+</div>
+
+<script>
+let loginRole  = 'student';
+let signupRole = 'student';
+
+function switchAuth(mode) {
+  document.getElementById('loginForm').classList.toggle('show',  mode === 'login');
+  document.getElementById('signupForm').classList.toggle('show', mode === 'signup');
+  document.getElementById('tabLogin').classList.toggle('active',  mode === 'login');
+  document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
+}
+
+function selectRole(role, el, form) {
+  const tabsId = form === 'login' ? 'loginRoleTabs' : 'signupRoleTabs';
+  document.querySelectorAll('#' + tabsId + ' .role-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (form === 'login') {
+    loginRole = role;
+  } else {
+    signupRole = role;
+    document.querySelectorAll('.signup-panel').forEach(p => p.classList.remove('show'));
+    document.getElementById('panel-' + role).classList.add('show');
+  }
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  const btn = document.getElementById('loginBtn');
+  const errEl = document.getElementById('loginError');
+
+  if (!username || !password) { showMsg(errEl,'⚠️ Please fill in all fields.'); return; }
+
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="spinner"></span>Signing in...';
+  errEl.classList.remove('show');
+
+  try {
+    const r = await fetch('../api/login.php', {
+      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:`username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+    });
+    const d = await r.json();
+    if (d.success) {
+      sessionStorage.setItem('user_role', d.role);
+      sessionStorage.setItem('username',  username);
+      sessionStorage.setItem('user_name', d.name || username);
+      btn.innerHTML = '✅ Redirecting...';
+      const redirects = {student:'student_dashboard.html', teacher:'teacher_dashboard.html', admin:'admin_dashboard.html'};
+      setTimeout(() => window.location.href = redirects[d.role], 700);
+    } else {
+      throw new Error(d.message || 'Invalid credentials');
+    }
+  } catch(e) {
+    btn.classList.remove('loading'); btn.innerHTML = 'Sign In →';
+    showMsg(errEl, '❌ ' + (e.message === 'Failed to fetch' ? 'Server not connected. Check XAMPP.' : e.message));
+  }
+}
+
+async function doSignup() {
+  const btn = document.getElementById('signupBtn');
+  const errEl = document.getElementById('signupError');
+  const sucEl = document.getElementById('signupSuccess');
+  errEl.classList.remove('show'); sucEl.classList.remove('show');
+
+  let fields = {}, pass = '', confirm = '';
+
+  if (signupRole === 'student') {
+    fields = { first:document.getElementById('s-first').value.trim(), last:document.getElementById('s-last').value.trim(), email:document.getElementById('s-email').value.trim(), phone:document.getElementById('s-phone').value.trim(), roll:document.getElementById('s-roll').value.trim(), branch:document.getElementById('s-branch').value, sem:document.getElementById('s-sem').value, section:document.getElementById('s-section').value, uname:document.getElementById('s-uname').value.trim() };
+    pass = document.getElementById('s-pass').value; confirm = document.getElementById('s-confirm').value;
+  } else if (signupRole === 'teacher') {
+    fields = { first:document.getElementById('t-first').value.trim(), last:document.getElementById('t-last').value.trim(), email:document.getElementById('t-email').value.trim(), phone:document.getElementById('t-phone').value.trim(), empid:document.getElementById('t-empid').value.trim(), desig:document.getElementById('t-desig').value, dept:document.getElementById('t-dept').value, qual:document.getElementById('t-qual').value, subjects:document.getElementById('t-subjects').value.trim(), exp:document.getElementById('t-exp').value, uname:document.getElementById('t-uname').value.trim() };
+    pass = document.getElementById('t-pass').value; confirm = document.getElementById('t-confirm').value;
+  } else {
+    fields = { first:document.getElementById('a-first').value.trim(), last:document.getElementById('a-last').value.trim(), email:document.getElementById('a-email').value.trim(), phone:document.getElementById('a-phone').value.trim(), staffid:document.getElementById('a-staffid').value.trim(), adminrole:document.getElementById('a-role').value, dept:document.getElementById('a-dept').value, access:document.getElementById('a-access').value, authcode:document.getElementById('a-authcode').value.trim(), uname:document.getElementById('a-uname').value.trim() };
+    pass = document.getElementById('a-pass').value; confirm = document.getElementById('a-confirm').value;
+  }
+
+  if (Object.values(fields).some(v => !v) || !pass || !confirm) { showMsg(errEl,'⚠️ Please fill in all required fields.'); return; }
+  if (pass.length < 8) { showMsg(errEl,'⚠️ Password must be at least 8 characters.'); return; }
+  if (pass !== confirm) { showMsg(errEl,'❌ Passwords do not match.'); return; }
+  if (signupRole === 'admin' && fields.authcode !== 'ITM2025') { showMsg(errEl,'❌ Invalid Authorization Code. Contact IT Cell.'); return; }
+
+  btn.classList.add('loading'); btn.innerHTML = '<span class="spinner"></span>Creating account...';
+
+  try {
+    const body = Object.entries({...fields, password:pass, role:signupRole}).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
+    const r = await fetch('../api/register.php', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+    const d = await r.json();
+    btn.classList.remove('loading'); btn.innerHTML = 'Create Account →';
+    if (d.success) {
+      showSuccess(sucEl,'✅ Account created successfully! Please login.');
+      setTimeout(() => switchAuth('login'), 2000);
+    } else { showMsg(errEl,'❌ ' + d.message); }
+  } catch(e) {
+    btn.classList.remove('loading'); btn.innerHTML = 'Create Account →';
+    showMsg(errEl, e.message === 'Failed to fetch' ? '❌ Server not connected. Check XAMPP.' : '❌ Registration failed.');
+  }
+}
+
+function showMsg(el,msg) { el.textContent=msg; el.className='msg-box error show'; }
+function showSuccess(el,msg) { el.textContent=msg; el.className='msg-box success show'; }
+</script>
+</body>
+</html>
