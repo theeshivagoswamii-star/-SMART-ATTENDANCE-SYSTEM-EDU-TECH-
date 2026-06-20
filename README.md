@@ -25,29 +25,6 @@ edu-tech/
 └── README.md                   ← This file
 ```
 
----
-
-## 🚀 Setup Instructions
-
-### Option A — Demo Mode (No server needed)
-Just open `frontend/login.html` in any browser. Use these credentials:
-| Username | Password | Role    |
-|----------|----------|---------|
-| student1 | password | Student |
-| teacher1 | password | Teacher |
-| admin    | password | Admin   |
-
-### Option B — Full Stack (XAMPP/WAMP required)
-1. **Install XAMPP** → https://www.apachefriends.org
-2. **Copy project** to `C:/xampp/htdocs/edu-tech/`
-3. **Import database:**
-   - Open phpMyAdmin → http://localhost/phpmyadmin
-   - Create DB: `edu_tech`
-   - Import: `database.sql`
-4. **Configure DB** in `config/db_connection.php` (set your credentials)
-5. **Open browser:** http://localhost/edu-tech/frontend/login.html
-
----
 
 ## 🛠️ Technology Stack
 | Layer      | Technology                    |
